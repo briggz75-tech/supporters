@@ -104,7 +104,7 @@ export default function Sidebar({ stats, onClose }: SidebarProps) {
         {!isCollapsed && (
           <div className="absolute bottom-4 left-4 right-4 p-3 bg-gray-700/50 rounded-lg text-xs text-gray-300">
             <p className="font-semibold mb-1">Need help?</p>
-            <p>Check documentation or contact support</p>
+            <p>Contact Elton for more info 79750979</p>
           </div>
         )}
       </aside>
