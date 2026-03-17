@@ -139,10 +139,11 @@ export default function SupporterCard({ supporter }: SupporterCardProps) {
                   href={`https://wa.me/${supporter.phone.replace(/[^0-9]/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-green-600 hover:text-green-800 text-lg ml-2"
+                  className="text-green-600 hover:text-green-800 text-lg ml-2 flex items-center gap-1"
                   title="Contact via WhatsApp"
                 >
                   <span role="img" aria-label="WhatsApp">🟢</span>
+                  <span className="text-xs font-semibold">whatsapp</span>
                 </a>
               </div>
             )}
