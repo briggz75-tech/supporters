@@ -30,13 +30,11 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
         .limit(50)
 
       if (error) {
-        console.error('Search error:', error)
         onSearch([], false)
       } else {
         onSearch(data as Supporter[], false)
       }
     } catch (err) {
-      console.error('Search exception:', err)
       onSearch([], false)
     } finally {
       setIsLoading(false)

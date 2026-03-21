@@ -79,6 +79,24 @@ export default function Sidebar({ stats, onClose }: SidebarProps) {
           <NavItem icon="🔍" label="Search" isCollapsed={isCollapsed} />
           <NavItem icon="👥" label="Supporters" isCollapsed={isCollapsed} />
           <NavItem icon="⚙️" label="Settings" isCollapsed={isCollapsed} />
+          <a
+            href="/admin"
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-purple-700 text-sm font-medium ${isCollapsed ? 'justify-center' : ''}`}
+            style={{ color: '#fff', textDecoration: 'none' }}
+            title="Admin Panel"
+          >
+            <span>🛡️</span>
+            {!isCollapsed && <span>Admin Panel</span>}
+          </a>
+          <a
+            href="/login"
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors hover:bg-purple-700 text-sm font-medium ${isCollapsed ? 'justify-center' : ''}`}
+            style={{ color: '#fff', textDecoration: 'none' }}
+            title="Admin Login"
+          >
+            <span>🔐</span>
+            {!isCollapsed && <span>Admin Login</span>}
+          </a>
         </nav>
 
         {/* Statistics */}

@@ -237,19 +237,85 @@ Then: `npm run dev -- --env-file .env.local.staging`
 
 ---
 
+## OpenAI Configuration (Chatbot)
+
+The dashboard now includes an AI-powered chatbot assistant. To enable it, you need an OpenAI API key.
+
+### Getting Your OpenAI API Key
+
+#### Step 1: Create OpenAI Account
+- Go to https://platform.openai.com
+- Sign up with email or Google/Microsoft account
+- Verify your email
+
+#### Step 2: Create API Key
+1. Click your profile icon (top right)
+2. Select **API keys** from dropdown
+3. Click **Create new secret key**
+4. Copy the key (starts with `sk-`)
+5. Add to `.env.local` as `OPENAI_API_KEY`
+
+**Example:**
+```
+OPENAI_API_KEY=sk-proj-abc123xyz...
+```
+
+### Add to .env.local
+
+Your `.env.local` should now look like:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+OPENAI_API_KEY=sk-proj-your-key-here
+```
+
+### Variable Explanation
+
+#### `OPENAI_API_KEY`
+- **Type**: String (API Key)
+- **Purpose**: Authenticates requests to OpenAI's API for chatbot
+- **Visibility**: Server-side only (NOT public)
+- **Cost**: Pay-as-you-go, typically $0.01-0.10 per chat request
+- **Example**: `sk-proj-abc123xyz...`
+
+### Accessing the Chatbot
+
+Once configured:
+1. Start the dev server: `npm run dev`
+2. Open http://localhost:3000
+3. Click the **💬** button in bottom-right corner
+4. Ask the chatbot about your supporter data!
+
+### What the Chatbot Can Do
+
+- Answer questions about your supporter data
+- Provide statistics and insights
+- Help with dashboard navigation
+- Explain trends in supporter status and location
+
+### Pricing & Limits
+
+- **Model**: GPT-3.5 Turbo (most cost-effective)
+- **Free Trial**: $5 credit for 3 months
+- **Cost Example**: ~$0.05 per conversation (10-20 messages)
+- **Rate Limit**: 3,500 requests per minute (sufficient for small teams)
+
+---
+
 ## Support
 
-**Can't find your credentials?**
+**Chatbot issues?**
 
-1. Supabase Help: https://supabase.com/docs/guides/api#api-url-and-keys
-2. Common issues: https://supabase.com/docs/api/auth#api-auth
-3. Discord community: https://discord.supabase.com
+1. Check `OPENAI_API_KEY` is set correctly in `.env.local`
+2. Verify API key is active at https://platform.openai.com/api-keys
+3. Check you have remaining API credits
+4. See browser console (F12) for detailed errors
 
-**Need to regenerate keys?**
-
-In Supabase → Settings → API → Service Role Keys or Anon Keys → click the 🔄 icon
+**OpenAI Help**: https://platform.openai.com/docs
 
 ---
 
 **Status**: Ready to configure ✅
-**Next**: Create Supabase account and copy credentials
+**Next**: Create Supabase account, get OpenAI key, and copy credentials to `.env.local`
+
