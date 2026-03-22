@@ -15,8 +15,10 @@ export type Supporter = {
   image_url: string | null
   status: string
   is_approved: boolean
+  approval_status: 'pending' | 'approved' | 'rejected'
   created_at: string
   updated_at: string
+  rejected_at?: string | null
   coordinator_id: string | null
   coordinator_notes: string | null
   title: string | null

@@ -178,6 +178,7 @@ export default function AddSupporterPage() {
           image_url: imageUrl || null,
           coordinator_notes: formData.coordinator_notes || null,
           is_approved: false,
+          approval_status: 'pending',
         },
       ])
 

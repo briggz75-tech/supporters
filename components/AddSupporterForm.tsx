@@ -151,6 +151,7 @@ export default function AddSupporterForm({
           image_url: imageUrl || null,
           coordinator_notes: formData.coordinator_notes || null,
           is_approved: false,
+          approval_status: 'pending',
         },
       ])
 

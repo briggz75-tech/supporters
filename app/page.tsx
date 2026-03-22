@@ -34,7 +34,7 @@ export default function Home() {
       const { data, error } = await supabase
         .from('supporters')
         .select('*')
-        .eq('is_approved', true)
+        .eq('approval_status', 'approved')
         .order('created_at', { ascending: false })
         .limit(100)
       if (error) {
@@ -53,7 +53,7 @@ export default function Home() {
       const { data, error } = await supabase
         .from('supporters')
         .select('status', { count: 'exact' })
-        .eq('is_approved', true)
+        .eq('approval_status', 'approved')
 
       if (error) {
         return

@@ -60,7 +60,7 @@ function AdminDashboard() {
 
   // Calculate statistics
   const calculateStats = (data: Supporter[]) => {
-    const approvedData = data.filter((s) => s.is_approved === true)
+    const approvedData = data.filter((s) => s.approval_status === 'approved')
     const stats = {
       total: approvedData.length,
       strong: approvedData.filter((s) => s.status?.toLowerCase().includes('strong')).length,
@@ -175,7 +175,10 @@ function AdminDashboard() {
     try {
       const { error } = await supabase
         .from('supporters')
-        .update({ is_approved: true })
+        .update({ 
+          is_approved: true,
+          approval_status: 'approved'
+        })
         .eq('id', id)
 
       if (error) {
@@ -186,7 +189,7 @@ function AdminDashboard() {
 
       addToast('Supporter approved successfully!', 'success')
       setSupporters((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, is_approved: true } : s))
+        prev.map((s) => (s.id === id ? { ...s, is_approved: true, approval_status: 'approved' } : s))
       )
       setSyncStatus('live')
     } catch (err) {
@@ -196,13 +199,17 @@ function AdminDashboard() {
     }
   }, [addToast])
 
-  // Reject/delete supporter
+  // Reject/mark supporter as rejected
   const handleRejectSupporter = useCallback(async (id: string) => {
     setSyncStatus('syncing')
     try {
       const { error } = await supabase
         .from('supporters')
-        .delete()
+        .update({ 
+          approval_status: 'rejected',
+          rejected_at: new Date().toISOString(),
+          is_approved: false 
+        })
         .eq('id', id)
 
       if (error) {
@@ -211,7 +218,7 @@ function AdminDashboard() {
         return
       }
 
-      addToast('Supporter rejected and removed', 'success')
+      addToast('Supporter rejected', 'success')
       setSupporters((prev) => prev.filter((s) => s.id !== id))
       setSyncStatus('live')
     } catch (err) {
