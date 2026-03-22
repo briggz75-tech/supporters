@@ -50,9 +50,9 @@ export default function AdminSupporters({
     filteredSupporters = filteredSupporters.filter((s) => s.district === filterDistrict)
   }
   if (filterApproval === 'approved') {
-    filteredSupporters = filteredSupporters.filter((s) => s.approval_status === 'approved')
+    filteredSupporters = filteredSupporters.filter((s) => s.approval_status === 'approved' || s.is_approved === true)
   } else if (filterApproval === 'pending') {
-    filteredSupporters = filteredSupporters.filter((s) => s.approval_status === 'pending')
+    filteredSupporters = filteredSupporters.filter((s) => (s.approval_status === 'pending' || s.approval_status === undefined) && s.is_approved === false)
   }
 
   // Apply sorting
@@ -274,20 +274,20 @@ export default function AdminSupporters({
       )}
 
       {/* Pending Approvals Section */}
-      {!filterApproval && supporters.some((s) => s.approval_status === 'pending') && (
+      {!filterApproval && supporters.some((s) => s.approval_status === 'pending' || (s.approval_status === undefined && s.is_approved === false)) && (
         <div className="bg-white rounded-lg shadow-sm border border-yellow-300 p-6">
           <div className="flex items-center gap-2 mb-4">
             <div className="text-2xl">⏳</div>
             <h2 className="text-lg font-semibold text-gray-900">Pending Approvals</h2>
             <span className="ml-auto inline-flex items-center justify-center w-6 h-6 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full">
-              {supporters.filter((s) => s.approval_status === 'pending').length}
+              {supporters.filter((s) => s.approval_status === 'pending' || (s.approval_status === undefined && s.is_approved === false)).length}
             </span>
           </div>
 
           {/* Pending Supporters Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {supporters
-              .filter((s) => s.approval_status === 'pending')
+              .filter((s) => s.approval_status === 'pending' || (s.approval_status === undefined && s.is_approved === false))
               .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
               .map((supporter) => (
                 <div key={supporter.id} className="relative bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">

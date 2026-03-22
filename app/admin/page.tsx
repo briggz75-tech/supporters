@@ -203,6 +203,7 @@ function AdminDashboard() {
   const handleRejectSupporter = useCallback(async (id: string) => {
     setSyncStatus('syncing')
     try {
+      console.log('🔴 Rejecting supporter:', id)
       const { error } = await supabase
         .from('supporters')
         .update({ 
@@ -213,11 +214,13 @@ function AdminDashboard() {
         .eq('id', id)
 
       if (error) {
+        console.error('❌ Rejection error:', error)
         addToast(`Rejection failed: ${error.message}`, 'error')
         setSyncStatus('error')
         return
       }
 
+      console.log('✅ Supporter rejected successfully')
       addToast('Supporter rejected', 'success')
       setSupporters((prev) => prev.filter((s) => s.id !== id))
       setSyncStatus('live')
