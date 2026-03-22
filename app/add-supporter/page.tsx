@@ -7,6 +7,18 @@ import DashboardHeader from '@/components/DashboardHeader'
 import { useToast } from '@/components/Toast'
 
 const statusOptions = ['Strong', 'Leaning', 'Undecided']
+const districtOptions = [
+  'Bulolo',
+  'Finschhafen',
+  'Huon Gulf',
+  'Kabwum',
+  'Lae',
+  'Markham',
+  'Menyamya',
+  'Nawaeb',
+  'Tewai-Siassi',
+  'Wau Waria',
+]
 
 export default function AddSupporterPage() {
   const router = useRouter()
@@ -165,6 +177,7 @@ export default function AddSupporterPage() {
           title: formData.title || null,
           image_url: imageUrl || null,
           coordinator_notes: formData.coordinator_notes || null,
+          is_approved: false,
         },
       ])
 
@@ -220,76 +233,100 @@ export default function AddSupporterPage() {
         description="Register a new campaign supporter to your database"
       />
 
-      <div className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
+      <div className="max-w-4xl mx-auto p-3 sm:p-4 md:p-6">
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <form onSubmit={handleSubmit} className="p-6 sm:p-8">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 md:p-8">
             {/* Image Upload Section */}
-            <div className="mb-8 pb-8 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">📸 Supporter Photo</h3>
-              <div className="flex flex-col sm:flex-row gap-6 items-start">
+            <div className="mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">📸 Supporter Photo</h3>
+              <div className="flex flex-col gap-3 sm:gap-6">
                 {/* Preview */}
                 {imagePreview ? (
-                  <div className="flex-shrink-0 relative">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-indigo-200"
-                    />
-                    <button
-                      type="button"
-                      onClick={clearImagePreview}
-                      className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold transition-colors"
-                    >
-                      ✕
-                    </button>
+                  <div className="flex flex-col items-center sm:flex-row sm:items-start gap-3 sm:gap-4">
+                    <div className="flex-shrink-0 relative">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-indigo-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={clearImagePreview}
+                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold transition-colors"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    
+                    {/* Upload Buttons for Preview State */}
+                    <div className="w-full space-y-2 sm:flex-1">
+                      <button
+                        type="button"
+                        onClick={handleFileUploadClick}
+                        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
+                      >
+                        📁 Change Photo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={clearImagePreview}
+                        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg font-medium transition-colors"
+                      >
+                        ✕ Clear
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <div className="flex-shrink-0 w-24 h-24 sm:w-32 sm:h-32 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-2xl">
-                    📷
-                  </div>
-                )}
+                  <>
+                    <div className="w-full bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center py-8 sm:py-12 text-gray-400 text-3xl">
+                      📷
+                    </div>
 
-                {/* Upload Buttons */}
-                <div className="flex-1 space-y-3">
-                  <button
-                    type="button"
-                    onClick={handleFileUploadClick}
-                    className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
-                  >
-                    📁 Upload Photo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCameraClick}
-                    className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                  >
-                    📷 Take Photo
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <input
-                    ref={cameraInputRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </div>
+                    {/* Upload Buttons */}
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        onClick={handleFileUploadClick}
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
+                      >
+                        📁 Upload Photo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCameraClick}
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                      >
+                        📷 Take Photo
+                      </button>
+                    </div>
+                  </>
+                )}
+                
+                {/* Hidden input elements */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
               </div>
             </div>
 
             {/* Primary Information */}
-            <div className="mb-8 pb-8 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">👤 Primary Information</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">👤 Primary Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Full Name *
                   </label>
                   <input
@@ -299,11 +336,11 @@ export default function AddSupporterPage() {
                     onChange={handleChange}
                     placeholder="John Doe"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Phone Number *
                   </label>
                   <input
@@ -313,31 +350,36 @@ export default function AddSupporterPage() {
                     onChange={handleChange}
                     placeholder="+675 1234 5678"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   />
                 </div>
               </div>
             </div>
 
             {/* Location Information */}
-            <div className="mb-8 pb-8 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">📍 Location Information</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">📍 Location Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     District
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="district"
                     value={formData.district}
                     onChange={handleChange}
-                    placeholder="e.g., Port Moresby"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                  />
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white"
+                  >
+                    <option value="">Select District</option>
+                    {districtOptions.map((district) => (
+                      <option key={district} value={district}>
+                        {district}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     LLG (Local Level Government)
                   </label>
                   <input
@@ -345,12 +387,12 @@ export default function AddSupporterPage() {
                     name="llg"
                     value={formData.llg}
                     onChange={handleChange}
-                    placeholder="e.g., Motu-Koita"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="e.g., Ahi LLG, LULLG, etc."
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Ward
                   </label>
                   <input
@@ -359,18 +401,18 @@ export default function AddSupporterPage() {
                     value={formData.ward}
                     onChange={handleChange}
                     placeholder="e.g., Ward 1"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   />
                 </div>
               </div>
             </div>
 
             {/* Additional Information */}
-            <div className="mb-8 pb-8 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">ℹ️ Additional Information</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">ℹ️ Additional Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Title / Position
                   </label>
                   <input
@@ -378,19 +420,19 @@ export default function AddSupporterPage() {
                     name="title"
                     value={formData.title}
                     onChange={handleChange}
-                    placeholder="e.g., Business Owner, Teacher"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="e.g., Councillor, Teacher, Community Leader"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Support Status *
                   </label>
                   <select
                     name="status"
                     value={formData.status}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white"
                   >
                     {statusOptions.map((status) => (
                       <option key={status} value={status}>
@@ -407,40 +449,41 @@ export default function AddSupporterPage() {
             </div>
 
             {/* Notes */}
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">📝 Coordinator Notes</h3>
+            <div className="mb-6 sm:mb-8">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">📝 Coordinator Notes</h3>
               <textarea
                 name="coordinator_notes"
                 value={formData.coordinator_notes}
                 onChange={handleChange}
                 placeholder="Add any relevant notes about this supporter..."
                 rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
+                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
               />
             </div>
 
             {/* Form Actions */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-between">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 justify-between">
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="px-6 py-3 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-colors"
+                className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-colors"
               >
                 ← Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                className="px-4 sm:px-6 py-2.5 sm:py-3 text-sm bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
                     <span className="animate-spin">⟳</span>
-                    Adding...
+                    <span className="hidden sm:inline">Adding...</span>
                   </>
                 ) : (
                   <>
-                    ✓ Add Supporter
+                    ✓ <span className="hidden sm:inline">Add Supporter</span>
+                    <span className="sm:hidden">Add</span>
                   </>
                 )}
               </button>
@@ -449,13 +492,10 @@ export default function AddSupporterPage() {
         </div>
 
         {/* Help Section */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900">
-          <p className="font-semibold mb-2">💡 Tips:</p>
-          <ul className="space-y-1 list-disc list-inside">
-            <li>All red(*) fields are required</li>
-            <li>Upload a photo to help identify the supporter</li>
-            <li>Use the status dropdown to indicate their level of support</li>
-            <li>Add notes to track important information about them</li>
+        <div className="mt-6 sm:mt-8 bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 text-xs sm:text-sm text-blue-900">
+          <p className="font-semibold mb-2"></p>
+          <ul className="space-y-1 list-disc list-inside text-xs sm:text-sm">
+            <li></li>
           </ul>
         </div>
       </div>

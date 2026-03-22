@@ -110,13 +110,22 @@ const EditSupporterModal: React.FC<EditSupporterModalProps> = ({
         }
       }
 
-      // Update supporter
+      // Update supporter - convert empty strings to null for nullable fields
+      const updatePayload = {
+        name: formData.name || '',
+        phone: formData.phone || null,
+        title: formData.title || null,
+        district: formData.district || null,
+        llg: formData.llg || null,
+        ward: formData.ward || null,
+        status: formData.status || 'Pending',
+        coordinator_notes: formData.coordinator_notes || null,
+        image_url: imageUrl,
+      }
+
       const { error } = await supabase
         .from('supporters')
-        .update({
-          ...formData,
-          image_url: imageUrl,
-        })
+        .update(updatePayload)
         .eq('id', supporter.id)
 
       if (error) {

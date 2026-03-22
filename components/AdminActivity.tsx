@@ -1,6 +1,7 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { supabase, Supporter } from '@/lib/supabaseClient'
 
 interface ActivityItem {
   id: string | number
@@ -10,73 +11,119 @@ interface ActivityItem {
   timestamp: string
   icon: string
   color: string
+  status?: string
 }
 
-// Mock activity data - in real app would come from API
-const mockActivity: ActivityItem[] = [
-  {
-    id: 1,
-    type: 'added',
-    name: 'John Doe',
-    description: 'Added as Strong supporter',
-    timestamp: '2 hours ago',
-    icon: '✅',
-    color: 'bg-green-50 border-green-300',
-  },
-  {
-    id: 2,
-    type: 'updated',
-    name: 'Jane Smith',
-    description: 'Status changed from Undecided to Leaning',
-    timestamp: '4 hours ago',
-    icon: '✏️',
-    color: 'bg-blue-50 border-blue-300',
-  },
-  {
-    id: 3,
-    type: 'deleted',
-    name: 'Peter Johnson',
-    description: 'Removed from supporters',
-    timestamp: '6 hours ago',
-    icon: '❌',
-    color: 'bg-red-50 border-red-300',
-  },
-  {
-    id: 4,
-    type: 'bulk',
-    name: 'Bulk Import',
-    description: 'Imported 25 supporters from CSV',
-    timestamp: 'Today',
-    icon: '📊',
-    color: 'bg-purple-50 border-purple-300',
-  },
-  {
-    id: 5,
-    type: 'added',
-    name: 'Sarah Wilson',
-    description: 'Added as Leaning supporter',
-    timestamp: 'Yesterday',
-    icon: '✅',
-    color: 'bg-green-50 border-green-300',
-  },
-]
+// Function to calculate relative time
+const getRelativeTime = (dateString: string): string => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMins / 60)
+  const diffDays = Math.floor(diffHours / 24)
+
+  if (diffMins < 1) return 'just now'
+  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`
+  if (diffDays === 1) return 'yesterday'
+  if (diffDays < 7) return `${diffDays} days ago`
+  return date.toLocaleDateString()
+}
+
+// Function to determine activity type based on timestamps
+const getActivityType = (supporter: Supporter): 'added' | 'updated' => {
+  const createdAt = new Date(supporter.created_at)
+  const updatedAt = new Date(supporter.updated_at)
+  const timeDiffMs = updatedAt.getTime() - createdAt.getTime()
+  return timeDiffMs < 5000 ? 'added' : 'updated'
+}
 
 export default function AdminActivity() {
   const [filter, setFilter] = React.useState<'all' | 'added' | 'updated' | 'deleted' | 'bulk'>(
     'all'
   )
+  const [activity, setActivity] = useState<ActivityItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch real activity data from last 24 hours
+  useEffect(() => {
+    const fetchActivity = async () => {
+      try {
+        setLoading(true)
+        
+        // Calculate 24 hours ago
+        const oneDayAgo = new Date()
+        oneDayAgo.setHours(oneDayAgo.getHours() - 24)
+        const oneDayAgoISO = oneDayAgo.toISOString()
+
+        // Fetch supporters modified in the last 24 hours
+        const { data: supporters, error } = await supabase
+          .from('supporters')
+          .select('*')
+          .or(`created_at.gte.${oneDayAgoISO},updated_at.gte.${oneDayAgoISO}`)
+          .order('updated_at', { ascending: false })
+
+        if (error) {
+          console.error('Error fetching activity:', error)
+          setActivity([])
+          setLoading(false)
+          return
+        }
+
+        // Convert supporter data to activity items
+        const activityItems: ActivityItem[] = (supporters || []).map((supporter: Supporter) => {
+          const activityType = getActivityType(supporter)
+          const timestamp = 
+            activityType === 'added' 
+              ? getRelativeTime(supporter.created_at)
+              : getRelativeTime(supporter.updated_at)
+
+          return {
+            id: supporter.id,
+            type: activityType,
+            name: supporter.name,
+            description: 
+              activityType === 'added'
+                ? supporter.status || 'New'
+                : `→ ${supporter.status || 'Updated'}`,
+            timestamp,
+            icon: activityType === 'added' ? '✅' : '✏️',
+            color:
+              activityType === 'added'
+                ? 'bg-green-50 border-green-300'
+                : 'bg-blue-50 border-blue-300',
+            status: supporter.status || 'Unknown',
+          }
+        })
+
+        setActivity(activityItems)
+      } catch (err) {
+        console.error('Failed to fetch activity:', err)
+        setActivity([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchActivity()
+    
+    // Refresh activity every 30 seconds
+    const interval = setInterval(fetchActivity, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   const filteredActivity =
-    filter === 'all' ? mockActivity : mockActivity.filter((item) => item.type === filter)
+    filter === 'all' ? activity : activity.filter((item) => item.type === filter)
 
   return (
     <div className="space-y-6">
       {/* Filter */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Activity Log</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity (Last 24h)</h2>
 
         <div className="flex flex-wrap gap-2 mb-6">
-          {(['all', 'added', 'updated', 'deleted', 'bulk'] as const).map((type) => (
+          {(['all', 'added', 'updated'] as const).map((type) => (
             <button
               key={type}
               onClick={() => setFilter(type)}
@@ -91,40 +138,55 @@ export default function AdminActivity() {
           ))}
         </div>
 
-        {filteredActivity.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin text-3xl mb-4">⏳</div>
+            <p className="text-gray-600">Loading activity...</p>
+          </div>
+        ) : filteredActivity.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-4xl mb-4">📭</div>
-            <p className="text-gray-600">No activity found</p>
+            <p className="text-gray-600">No activity in the last 24 hours</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {filteredActivity.map((activity) => (
+          <div className="space-y-2">
+            {filteredActivity.map((item) => (
               <div
-                key={activity.id}
-                className={`border-l-4 px-4 py-3 rounded-r-lg ${activity.color} flex items-start gap-4 hover:bg-opacity-75 transition-all`}
+                key={item.id}
+                className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all border border-gray-200"
               >
-                <div className="text-2xl flex-shrink-0">{activity.icon}</div>
+                {/* Icon Column */}
+                <div className="flex-shrink-0 text-2xl pt-1">{item.icon}</div>
+
+                {/* Content Column */}
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-gray-900">{activity.name}</h4>
-                  {activity.description && (
-                    <p className="text-sm text-gray-600 mt-1">{activity.description}</p>
-                  )}
-                  <p className="text-xs text-gray-500 mt-2">{activity.timestamp}</p>
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <h4 className="font-semibold text-gray-900">{item.name}</h4>
+                    {item.description && (
+                      <p className="text-sm text-gray-600">{item.description}</p>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">{item.timestamp}</p>
                 </div>
+
+                {/* Status Badge Column */}
                 <div className="flex-shrink-0">
-                  <span
-                    className={`text-xs font-medium px-2 py-1 rounded ${
-                      activity.type === 'added'
-                        ? 'bg-green-200 text-green-800'
-                        : activity.type === 'updated'
-                          ? 'bg-blue-200 text-blue-800'
-                          : activity.type === 'deleted'
-                            ? 'bg-red-200 text-red-800'
-                            : 'bg-purple-200 text-purple-800'
-                    }`}
-                  >
-                    {activity.type}
-                  </span>
+                  {item.status && (
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        item.status.toLowerCase().includes('strong')
+                          ? 'bg-green-100 text-green-800'
+                          : item.status.toLowerCase().includes('lean')
+                            ? 'bg-blue-100 text-blue-800'
+                            : item.status.toLowerCase().includes('undecided') ||
+                              item.status.toLowerCase().includes('pending')
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {item.status}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
@@ -133,36 +195,28 @@ export default function AdminActivity() {
       </div>
 
       {/* Activity Summary Card */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
           <div className="text-3xl mb-2">✅</div>
-          <p className="text-sm text-gray-600">Total Added</p>
+          <p className="text-sm text-gray-600">Added (24h)</p>
           <p className="text-2xl font-bold text-gray-900">
-            {mockActivity.filter((a) => a.type === 'added').length}
+            {activity.filter((a) => a.type === 'added').length}
           </p>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
           <div className="text-3xl mb-2">✏️</div>
-          <p className="text-sm text-gray-600">Total Updated</p>
+          <p className="text-sm text-gray-600">Updated (24h)</p>
           <p className="text-2xl font-bold text-gray-900">
-            {mockActivity.filter((a) => a.type === 'updated').length}
-          </p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
-          <div className="text-3xl mb-2">❌</div>
-          <p className="text-sm text-gray-600">Total Deleted</p>
-          <p className="text-2xl font-bold text-gray-900">
-            {mockActivity.filter((a) => a.type === 'deleted').length}
+            {activity.filter((a) => a.type === 'updated').length}
           </p>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 text-center">
           <div className="text-3xl mb-2">📊</div>
-          <p className="text-sm text-gray-600">Bulk Operations</p>
+          <p className="text-sm text-gray-600">Total Changes</p>
           <p className="text-2xl font-bold text-gray-900">
-            {mockActivity.filter((a) => a.type === 'bulk').length}
+            {activity.length}
           </p>
         </div>
       </div>

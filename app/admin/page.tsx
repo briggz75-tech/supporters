@@ -60,11 +60,12 @@ function AdminDashboard() {
 
   // Calculate statistics
   const calculateStats = (data: Supporter[]) => {
+    const approvedData = data.filter((s) => s.is_approved === true)
     const stats = {
-      total: data.length,
-      strong: data.filter((s) => s.status?.toLowerCase().includes('strong')).length,
-      leaning: data.filter((s) => s.status?.toLowerCase().includes('lean')).length,
-      undecided: data.filter(
+      total: approvedData.length,
+      strong: approvedData.filter((s) => s.status?.toLowerCase().includes('strong')).length,
+      leaning: approvedData.filter((s) => s.status?.toLowerCase().includes('lean')).length,
+      undecided: approvedData.filter(
         (s) =>
           s.status?.toLowerCase().includes('undecided') ||
           s.status?.toLowerCase().includes('pending')
@@ -168,6 +169,58 @@ function AdminDashboard() {
     }
   }, [addToast])
 
+  // Approve supporter
+  const handleApproveSupporter = useCallback(async (id: string) => {
+    setSyncStatus('syncing')
+    try {
+      const { error } = await supabase
+        .from('supporters')
+        .update({ is_approved: true })
+        .eq('id', id)
+
+      if (error) {
+        addToast(`Approval failed: ${error.message}`, 'error')
+        setSyncStatus('error')
+        return
+      }
+
+      addToast('Supporter approved successfully!', 'success')
+      setSupporters((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, is_approved: true } : s))
+      )
+      setSyncStatus('live')
+    } catch (err) {
+      console.error('❌ Approval error:', err)
+      addToast('An error occurred while approving supporter', 'error')
+      setSyncStatus('error')
+    }
+  }, [addToast])
+
+  // Reject/delete supporter
+  const handleRejectSupporter = useCallback(async (id: string) => {
+    setSyncStatus('syncing')
+    try {
+      const { error } = await supabase
+        .from('supporters')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        addToast(`Rejection failed: ${error.message}`, 'error')
+        setSyncStatus('error')
+        return
+      }
+
+      addToast('Supporter rejected and removed', 'success')
+      setSupporters((prev) => prev.filter((s) => s.id !== id))
+      setSyncStatus('live')
+    } catch (err) {
+      console.error('❌ Rejection error:', err)
+      addToast('An error occurred while rejecting supporter', 'error')
+      setSyncStatus('error')
+    }
+  }, [addToast])
+
   // Export to CSV
   const handleExport = useCallback(() => {
     if (supporters.length === 0) {
@@ -253,6 +306,8 @@ function AdminDashboard() {
             }}
             onBulkDelete={handleBulkDelete}
             onBulkStatusUpdate={handleBulkStatusUpdate}
+            onApproveSupporter={handleApproveSupporter}
+            onRejectSupporter={handleRejectSupporter}
           />
         )}
 

@@ -14,6 +14,7 @@ export type Supporter = {
   phone: string | null
   image_url: string | null
   status: string
+  is_approved: boolean
   created_at: string
   updated_at: string
   coordinator_id: string | null

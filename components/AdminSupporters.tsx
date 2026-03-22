@@ -14,6 +14,8 @@ interface AdminSupportersProps {
   onSupporterDeleted?: (id: string) => void
   onBulkDelete?: (ids: string[]) => void | Promise<void>
   onBulkStatusUpdate?: (ids: string[], status: string) => void | Promise<void>
+  onApproveSupporter?: (id: string) => void | Promise<void>
+  onRejectSupporter?: (id: string) => void | Promise<void>
 }
 
 export default function AdminSupporters({
@@ -23,11 +25,14 @@ export default function AdminSupporters({
   onSupporterDeleted,
   onBulkDelete,
   onBulkStatusUpdate,
+  onApproveSupporter,
+  onRejectSupporter,
 }: AdminSupportersProps) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [selectedSupporters, setSelectedSupporters] = useState<Set<string>>(new Set())
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [filterDistrict, setFilterDistrict] = useState<string>('')
+  const [filterApproval, setFilterApproval] = useState<string>('')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name'>('newest')
 
   // Get unique districts
@@ -43,6 +48,11 @@ export default function AdminSupporters({
   }
   if (filterDistrict) {
     filteredSupporters = filteredSupporters.filter((s) => s.district === filterDistrict)
+  }
+  if (filterApproval === 'approved') {
+    filteredSupporters = filteredSupporters.filter((s) => s.is_approved === true)
+  } else if (filterApproval === 'pending') {
+    filteredSupporters = filteredSupporters.filter((s) => s.is_approved === false)
   }
 
   // Apply sorting
@@ -103,7 +113,7 @@ export default function AdminSupporters({
         </div>
 
         {/* Filter Controls */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:grid-cols-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
             <select
@@ -137,6 +147,19 @@ export default function AdminSupporters({
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Approval</label>
+            <select
+              value={filterApproval}
+              onChange={(e) => setFilterApproval(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+            >
+              <option value="">All</option>
+              <option value="approved">Approved</option>
+              <option value="pending">Pending</option>
+            </select>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
             <select
               value={sortBy}
@@ -151,7 +174,7 @@ export default function AdminSupporters({
         </div>
 
         {/* Active Filters Display */}
-        {(filterStatus || filterDistrict) && (
+        {(filterStatus || filterDistrict || filterApproval) && (
           <div className="mt-4 flex flex-wrap gap-2">
             {filterStatus && (
               <span className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
@@ -169,6 +192,17 @@ export default function AdminSupporters({
                 District: {filterDistrict}
                 <button
                   onClick={() => setFilterDistrict('')}
+                  className="hover:text-indigo-900"
+                >
+                  ✕
+                </button>
+              </span>
+            )}
+            {filterApproval && (
+              <span className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
+                Approval: {filterApproval === 'approved' ? 'Approved' : 'Pending'}
+                <button
+                  onClick={() => setFilterApproval('')}
                   className="hover:text-indigo-900"
                 >
                   ✕
@@ -236,6 +270,62 @@ export default function AdminSupporters({
             onError={() => {}}
             onSuccess={() => {}}
           />
+        </div>
+      )}
+
+      {/* Pending Approvals Section */}
+      {!filterApproval && supporters.some((s) => !s.is_approved) && (
+        <div className="bg-white rounded-lg shadow-sm border border-yellow-300 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="text-2xl">⏳</div>
+            <h2 className="text-lg font-semibold text-gray-900">Pending Approvals</h2>
+            <span className="ml-auto inline-flex items-center justify-center w-6 h-6 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full">
+              {supporters.filter((s) => !s.is_approved).length}
+            </span>
+          </div>
+
+          {/* Pending Supporters Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {supporters
+              .filter((s) => !s.is_approved)
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+              .map((supporter) => (
+                <div key={supporter.id} className="relative bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3 mb-3">
+                    {supporter.image_url && (
+                      <img
+                        src={supporter.image_url}
+                        alt={supporter.name}
+                        className="w-12 h-12 rounded-lg object-cover"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 truncate">{supporter.name}</h3>
+                      <p className="text-sm text-gray-600">{supporter.title || 'No title'}</p>
+                      {supporter.district && (
+                        <p className="text-xs text-gray-500">{supporter.district}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Approval Buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => onApproveSupporter?.(supporter.id)}
+                      className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      ✓ Approve
+                    </button>
+                    <button
+                      onClick={() => onRejectSupporter?.(supporter.id)}
+                      className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      ✕ Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+          </div>
         </div>
       )}
 

@@ -26,48 +26,55 @@ export default function AdminOverview({
   onRefresh,
   isLoading = false,
 }: AdminOverviewProps) {
-  // Calculate trends (simple mock - in real app would come from historical data)
+  // Calculate trends based on real data
   const trends = {
-    total: 12,
-    strong: 8,
-    leaning: 15,
-    undecided: 5,
+    total: 0,
+    strong: 0,
+    leaning: 0,
+    undecided: 0,
   }
 
-  const recentActivity = [
-    {
-      id: 1,
-      type: 'added',
-      name: 'John Doe',
-      status: 'Strong',
-      time: '2 hours ago',
-      icon: '✅',
-    },
-    {
-      id: 2,
-      type: 'updated',
-      name: 'Jane Smith',
-      status: 'Leaning',
-      time: '4 hours ago',
-      icon: '✏️',
-    },
-    {
-      id: 3,
-      type: 'deleted',
-      name: 'Peter Johnson',
-      status: 'Undecided',
-      time: '6 hours ago',
-      icon: '❌',
-    },
-    {
-      id: 4,
-      type: 'bulk',
-      name: '25 new supporters',
-      status: 'registered',
-      time: 'Today',
-      icon: '📊',
-    },
-  ]
+  // Generate recent activity from supporters data
+  const recentActivity = supporters
+    .sort((a, b) => {
+      const dateA = new Date(a.created_at || a.updated_at).getTime()
+      const dateB = new Date(b.created_at || b.updated_at).getTime()
+      return dateB - dateA
+    })
+    .slice(0, 4)
+    .map((supporter) => {
+      const isRecent = new Date(supporter.created_at).getTime() > Date.now() - 24 * 60 * 60 * 1000
+      const isUpdated = new Date(supporter.updated_at).getTime() > new Date(supporter.created_at).getTime()
+      const activityType = isUpdated && !isRecent ? 'updated' : 'added'
+      const timeMs = new Date(activityType === 'added' ? supporter.created_at : supporter.updated_at).getTime()
+      const diffMs = Date.now() - timeMs
+      const hours = Math.floor(diffMs / (1000 * 60 * 60))
+      const days = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+      
+      let timeString = ''
+      if (hours < 1) timeString = 'Just now'
+      else if (hours < 24) timeString = `${hours}h ago`
+      else if (days < 7) timeString = `${days}d ago`
+      else timeString = new Date(timeMs).toLocaleDateString()
+
+      const statusEmoji =
+        supporter.status === 'strong'
+          ? '💪'
+          : supporter.status === 'leaning'
+            ? '🤝'
+            : supporter.status === 'undecided'
+              ? '❓'
+              : '✅'
+
+      return {
+        id: supporter.id,
+        type: activityType,
+        name: supporter.name,
+        status: supporter.status.charAt(0).toUpperCase() + supporter.status.slice(1),
+        time: timeString,
+        icon: activityType === 'updated' ? '✏️' : statusEmoji,
+      }
+    })
 
   return (
     <div className="space-y-6">
